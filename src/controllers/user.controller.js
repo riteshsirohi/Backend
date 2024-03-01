@@ -4,21 +4,25 @@ import {User} from "../models/usermodel.js";
 import {uploadOnCloudinary} from "../utils/cloudinary.js";
 import {ApiResponse} from  "../utils/ApiResponse.js";
 
-const generateAccesTokenandRefreshToken = async(userId) => {
+const generateAccesTokenandRefreshToken = async (userId) => {
     try {
-        const user = await User.findById(userId)
+        const user = await User.findById(userId);
+           
         const accessToken = user.generateAccessToken();
+
         const refreshToken = user.generateRefreshToken();
 
-        user.refreshToken = refreshToken
-        await user.save({validateBeforeSave:false})
-        
-        return {accessToken,refreshToken}
+        user.refreshToken = refreshToken;
 
+        await user.save({validateBeforeSave:false});
+
+        return { accessToken, refreshToken };
     } catch (error) {
-        throw new ApiError(500,"something went wrong");
+        console.error("Error in generateAccesTokenandRefreshToken:", error);
+        throw new ApiError(500, "Something went wrong");
     }
-}
+};
+
 
 const registerUser = asyncHandler( async (req, res) => {
      // get user details from frontend
@@ -109,7 +113,7 @@ const loginUser = asyncHandler(async (req,res) =>{
     })
 
     if(!user){
-        throw new ApiError(401,"user doesn,t exist");
+        throw new ApiError(401,"user doesn't exist");
     }
 
     const isPasswordValid = await user.isPasswordCorrect(password)
@@ -117,9 +121,10 @@ const loginUser = asyncHandler(async (req,res) =>{
     if(!isPasswordValid){
         throw new ApiError(401,"user credentials wrong");
     }
-        const {accessToken,refreshToken} =  await generateAccesTokenandRefreshToken(user._id)
+        const {accessToken,refreshToken} =  await generateAccesTokenandRefreshToken(user._id);
 
-       const loggedUser =  await User.findById(user._id).select("-password -refresToken")
+
+       const loggedUser =  await User.findById(user._id).select("-password -refreshToken");
 
        const options = {
         httpOnly:true,
@@ -127,18 +132,11 @@ const loginUser = asyncHandler(async (req,res) =>{
        }
 
        return res
-       .status(200).
-       cookie("accessToken",accessToken,options)
-       .cookie("refreshToken",refreshToken,options)
-       .json(
-      new ApiResponse(
-        200,
-        {
-            user:loggedUser.accessToken.refreshToken
-        },
-        "User logged in Succesfully"
-      )
-       )
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(new ApiResponse(200, { user: loggedUser }, "User logged in successfully"));
+
     }
 )
 
