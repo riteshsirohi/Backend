@@ -4,6 +4,7 @@ import {User} from "../models/usermodel.js";
 import {uploadOnCloudinary} from "../utils/cloudinary.js";
 import {ApiResponse} from  "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 const generateAccesTokenandRefreshToken = async (userId) => {
     try {
@@ -136,7 +137,11 @@ const loginUser = asyncHandler(async (req,res) =>{
     .status(200)
     .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
-    .json(new ApiResponse(200, { user: loggedUser }, "User logged in successfully"));
+    .json(new ApiResponse(200, 
+        {
+             user: loggedUser, accessToken, refreshToken
+            },
+         "User logged in successfully"));
 
     }
 )
